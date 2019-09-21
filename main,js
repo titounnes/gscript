@@ -1,0 +1,318 @@
+/*
+Set config
+*/
+
+function getStructure(sheetName){
+  var sheets = {
+    present: [
+      "nis","nama","status","deleted_at",
+    ],
+  }
+  return sheets[sheetName];
+}
+
+/*
+Set initial variable
+*/
+
+function init(){
+  return {
+    id : "1uYiE6KdjZLN_0nrVetTFUEGP_Pf5fiqAuinMhgUYaTY",
+    sheetName: '',
+    action : '',
+    columns: [],
+    key: '',
+  }
+}
+
+/*
+bootstraping
+*/
+function bootstrap(request){
+  var chekInit = init();
+  var route = cekRoute(request);
+  if(route == false){
+    return respond({
+      status: false,
+      message: "You dont have authorisation.",
+    })
+  }
+  
+  chekInit.sheetName = route.sheetName;
+  chekInit.action = route.action;
+  chekInit.columns = getStructure(route.sheetName);
+  chekInit.key = chekInit.columns[0];
+  
+  var integrity = checkColumn(request, chekInit);
+  if(integrity.status==false){
+    respond(integrity);
+    return false;
+  }
+  return chekInit;
+}
+
+/*
+Config/Route
+*/
+  
+function postRoute(){
+  return {
+      "present/put" : ["insert","update"],
+      "present/delete" : ["delete"], 
+  }
+}
+
+function getRoute(){
+  return {
+    "present":true,
+  }
+}
+
+/*
+Routing
+*/
+
+function cekRoute(request){
+  var route = request.parameter.route;
+  
+  if(route){
+    var segments = route.split("/");
+    return {
+      sheetName: segments[0],
+      action: segments[1]
+    }
+  }
+  return false;
+}
+
+/*
+Verify table structure
+*/
+  
+function checkColumn(request, activeSheet){
+  var ss = SpreadsheetApp.openById(activeSheet.id);
+  var sheet = ss.getSheetByName(activeSheet.sheetName);
+  
+  if(! sheet){
+    return {
+      status: false,
+      message: "Table "+ activeSheet.sheetName+" is not exists",
+    }
+  }
+  
+  var key = request.parameter[activeSheet.columns[0]];
+  var withKey = sheet.getRange(1,1).getValue() != key;
+  
+                              
+  for(var i = 1; i<=activeSheet.columns.length; i++){
+    var fieldName = sheet.getRange(1,i).getValue();
+    if(activeSheet.columns[i-1] != fieldName){
+      return {
+        status: false,
+        key: withKey,
+        message: "Column "+fieldName+" not exists."+JSON.stringify([activeSheet.columns,sheet]),
+      }
+      break;
+    }
+  }
+        
+  return {
+    status: true,
+    key: withKey,
+    message: "All Columns available",
+  }    
+}
+
+/*
+filter request for post method
+*/
+function doPost(request) {
+  
+  if(typeof postRoute()[request.parameter.route] == "undefined"){
+    return respond({
+      status: false,
+      message:"Action "+request.parameter.route+" does not allowed.",
+    })
+  }
+  
+  var myInit = bootstrap(request);
+  
+  
+  if(myInit==false){
+    return false;
+  }
+      
+  var activeRow = getRow(request, myInit);
+  
+  if(myInit.action=="put")
+  {
+    if(activeRow==-1){
+      if((postRoute()[request.parameter.route]).indexOf("insert") ==-1){
+        return respond({
+          status: false,
+          message: myInit.key+" does not exists.",
+        })
+      }
+      var id= insertData(request, myInit);
+      return respond({
+        status: true,
+        message: "Data has been added.",
+      })
+    }
+    var id= updateData(request, myInit, activeRow);
+    return respond({
+      status: true,
+      message: "Data has been updated.",
+    })   
+  }
+  if(activeRow==-1){
+    return respond({
+      status: false,
+      message: myInit.key+" does not exists.",
+    })
+  }
+  
+  var id= deleteData(myInit, activeRow);
+  return respond({
+    status: false,
+    message: "Data has beeen deleted.",
+  })
+}
+
+/*
+filter request for post method
+*/
+
+function doGet(request){
+  if(typeof getRoute()[request.parameter.route] == "undefined"){
+    return respond({
+      status: false,
+      message:"Action "+request.parameter.route+" does not allowed.",
+    })
+  }
+  
+  var myInit = bootstrap(request);
+  
+  if(myInit==false){
+    return false;
+  }
+
+  if(request.parameter[myInit.key]){
+    var activeRow = getRow(request, myInit);
+    if(activeRow==-1 || activeRow==false){
+      return respond({
+        status: false,
+        message: "Data not found.",
+      })
+    }
+    return respond({
+      status: true,
+      data: getOne(myInit, activeRow),
+    })
+  }
+   
+  var offset = request.parameter.offset*1;
+  var limit = request.parameter.limit*1;
+  return respond({
+    status: true,
+    data:getMany(myInit, offset, limit),
+  })
+}
+
+  
+function respond(message){
+  return ContentService.createTextOutput(JSON.stringify(message)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getRow(request,activeSheet){
+  var ss = SpreadsheetApp.openById(activeSheet.id);
+  var sheet = ss.getSheetByName(activeSheet.sheetName);
+  
+  var lastRow = sheet.getLastRow();
+  var key = request.parameter[activeSheet.key];
+  
+  if(typeof key == "undefined"){
+    return false;
+  }
+  
+  for(var row = 2; row<=lastRow;row++){
+    var deleted = sheet.getRange(row, activeSheet.columns.indexOf('deleted_at')+1).getValue();
+    if(key == sheet.getRange(row,1).getValue() && (typeof deleted=="undefined" || deleted =="")){
+      return row;
+      break;
+    }
+  }
+  return -1;
+}
+
+function insertData(request, activeSheet){
+  var protectFields = ["deleted_at"];
+  var ss = SpreadsheetApp.openById(activeSheet.id);
+  var sheet = ss.getSheetByName(activeSheet.sheetName);
+  var data = [];
+  
+  for(var i=0; i<activeSheet.columns.length;i++){
+    if(protectFields.indexOf(activeSheet.columns[i])==-1){
+      data.push(request.parameter[activeSheet.columns[i]]);
+    }
+  }
+  sheet.appendRow(data);
+}
+
+function updateData(request, activeSheet, activeRow){
+  var protectFields = ["deleted_at"];
+  var ss = SpreadsheetApp.openById(activeSheet.id);
+  var sheet = ss.getSheetByName(activeSheet.sheetName);
+  var data = [];
+  
+  for(var i=1; i<activeSheet.columns.length;i++){
+    if(protectFields.indexOf(activeSheet.columns[i])==-1){
+      sheet.getRange(activeRow, i+1).setValue(request.parameter[activeSheet.columns[i]]);
+    }
+  }
+}
+
+function deleteData(activeSheet, activeRow){  
+  var ss = SpreadsheetApp.openById(activeSheet.id);
+  var sheet = ss.getSheetByName(activeSheet.sheetName);
+  sheet.getRange(activeRow, activeSheet.columns.indexOf('deleted_at')+1).setValue(new Date());
+}
+
+  
+function getOne(activeSheet, activeRow){
+  var ss = SpreadsheetApp.openById(activeSheet.id);
+  var sheet = ss.getSheetByName(activeSheet.sheetName);
+  var data = {}
+  var protectFields = ["deleted_at"];
+  for(var i=0; i<activeSheet.columns.length;i++){
+    if(protectFields.indexOf(activeSheet.columns[i])==-1){
+      data[activeSheet.columns[i]] = sheet.getRange(activeRow, i+1).getValue();
+    }
+  }
+  return data;
+}
+
+function getMany(activeSheet, offset, limit){
+  var ss = SpreadsheetApp.openById(activeSheet.id);
+  var sheet = ss.getSheetByName(activeSheet.sheetName);
+  var limit = limit==0 ? 20 : limit;
+  var lastRow =  sheet.getLastRow();  
+  var data = [];
+
+  var protectFields = ["deleted_at"];
+  
+  var i=offset+2;
+  while(i<=lastRow && i < limit+2){
+    var row = {};
+    if(sheet.getRange(i, activeSheet.columns.indexOf('deleted_at')+1).getValue()==""){
+      for(var j=0; j<activeSheet.columns.length; j++){
+        if(protectFields.indexOf(activeSheet.columns[j])==-1){
+          row[activeSheet.columns[j]] = sheet.getRange(i, j+1).getValue();
+        }
+      }
+    }
+    i++;
+    data.push(row); 
+  }
+  return data;
+}
