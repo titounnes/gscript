@@ -17,7 +17,7 @@ Set initial variable
 
 function init(){
   return {
-    id : "ISIKAN ID google sheet anda",
+    id : "ISIKAN ID SPREADSHEET YANG DIJADIKAN SEBAGAI DATABASE",
     sheetName: '',
     action : '',
     columns: [],
@@ -199,6 +199,7 @@ function doGet(request){
 
   if(request.parameter[myInit.key]){
     var activeRow = getRow(request, myInit);
+
     if(activeRow==-1 || activeRow==false){
       return respond({
         status: false,
@@ -211,8 +212,17 @@ function doGet(request){
     })
   }
    
-  var offset = request.parameter.offset*1;
-  var limit = request.parameter.limit*1;
+  var offset = request.parameter.offset;
+  var limit = request.parameter.limit;
+  
+  if(typeof offset == 'undefined'){
+    offset = 0;
+  }
+  
+  if(typeof limit == 'undefined'){
+    limit = 0;
+  }
+  
   return respond({
     status: true,
     data:getMany(myInit, offset, limit),
@@ -227,18 +237,23 @@ function respond(message){
 function getRow(request,activeSheet){
   var ss = SpreadsheetApp.openById(activeSheet.id);
   var sheet = ss.getSheetByName(activeSheet.sheetName);
-  
-  var lastRow = sheet.getLastRow();
   var key = request.parameter[activeSheet.key];
-  
+  var lastRow = sheet.getLastRow();
   if(typeof key == "undefined"){
     return false;
   }
   
-  for(var row = 2; row<=lastRow;row++){
-    var deleted = sheet.getRange(row, activeSheet.columns.indexOf('deleted_at')+1).getValue();
-    if(key == sheet.getRange(row,1).getValue() && (typeof deleted=="undefined" || deleted =="")){
-      return row;
+  if(key*1==key){
+    key = key*1;
+  }
+  
+  var indexs = sheet.getRange(2, 1, lastRow).getValues();
+  var flags = sheet.getRange(2, activeSheet.columns.indexOf('deleted_at')+1, lastRow).getValues();
+  
+  for(var row = 0; row<indexs.length; row++){
+    var deleted = flags[row][0];  
+    if(key == indexs[row][0] && deleted ==""){
+      return row+2;
       break;
     }
   }
@@ -292,27 +307,23 @@ function getOne(activeSheet, activeRow){
   return data;
 }
 
+  
 function getMany(activeSheet, offset, limit){
   var ss = SpreadsheetApp.openById(activeSheet.id);
   var sheet = ss.getSheetByName(activeSheet.sheetName);
-  var limit = limit==0 ? 20 : limit;
-  var lastRow =  sheet.getLastRow();  
-  var data = [];
-
-  var protectFields = ["deleted_at"];
+  var flag = activeSheet.columns.indexOf('deleted_at')+1;
+  var lastRow =  sheet.getLastRow();
+  var dataSheet = sheet.getRange(2,1, flag, lastRow).getValues();
+  var result = [];
   
-  var i=offset+2;
-  while(i<=lastRow && i < limit+2){
-    var row = {};
-    if(sheet.getRange(i, activeSheet.columns.indexOf('deleted_at')+1).getValue()==""){
-      for(var j=0; j<activeSheet.columns.length; j++){
-        if(protectFields.indexOf(activeSheet.columns[j])==-1){
-          row[activeSheet.columns[j]] = sheet.getRange(i, j+1).getValue();
-        }
+  for(var i=0; i<dataSheet.length; i++){
+    if(dataSheet[i][flag-1] == ""){
+      var row = {};
+      for(var j =0; j<flag-1; j++){
+        row[activeSheet.columns[j]] = dataSheet[i][j];
       }
+      result.push(row);
     }
-    i++;
-    data.push(row); 
-  }
-  return data;
+  }  
+  return result.slice(offset, offset+limit); 
 }
