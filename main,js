@@ -17,7 +17,7 @@ Set initial variable
 
 function init(){
   return {
-    id : "1uYiE6KdjZLN_0nrVetTFUEGP_Pf5fiqAuinMhgUYaTY",
+    id : "ISIKAN ID google sheet anda",
     sheetName: '',
     action : '',
     columns: [],
