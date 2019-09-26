@@ -7,13 +7,13 @@ url API : https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-
 ## Method : post
   ### param 
     * route : present/put (insert/update)
-    * nis: [varchar]
-    * nama: [varchar]
-    * status : [varchar]
+    * nis: [alfanumerik|min_length[5]|max_length[20]|required]
+    * nama: [alfanumerik|min_length[3]|max_length[50]|required]
+    * status : [integer|min[0]|max[3]|require]
   
  ### param 
     * route : present/delete (soft delete)
-    * nis : [varcher] 
+    * nis : [alfanumerik|min_length[5]|max_length[20]|required] 
 
 ## Method : get
   ### param 
