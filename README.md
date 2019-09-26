@@ -25,4 +25,4 @@ url API : https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-
     * limit : [int]
     
 ## Penjelasan
-Di aplikasi ini saya sheetnya bernama "present" terdiri atas 4 kolom yaitu nis (alfanumerik), nama (alfanumerik), status (integer) dan deleted_at (timestamp)
+Di aplikasi ini saya menggunakan google sheet dengan nama sheet "present" terdiri atas 4 kolom yaitu nis (alfanumerik), nama (alfanumerik), status (integer) dan deleted_at (timestamp)
