@@ -24,4 +24,5 @@ url API : https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-
     * offset : [int]
     * limit : [int]
     
-    
+## Penjelasan
+Di aplikasi ini saya sheetnya bernama "present" terdiri atas 4 kolom yaitu nis (alfanumerik), nama (alfanumerik), status (integer) dan deleted_at (timestamp)
