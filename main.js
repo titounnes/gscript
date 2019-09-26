@@ -11,6 +11,120 @@ function getStructure(sheetName){
   return sheets[sheetName];
 }
 
+function typeData(sheetName){
+  var sheets = {
+    present: {
+      nis : 'alfanumerik|min_length[5]|max_length[20]|required',
+      nama: 'alfanumerik|min_length[3]|max_length[50]|required',
+      status: 'integer|min[0]|max[3]|required'
+    }
+  }
+  return sheets[sheetName];
+}
+  
+  function alfanumerik(column, data){
+   return true; 
+  }
+  
+  function integer(column, data){
+    var check = parseInt(data) == data*1;
+    if(check){
+      return true;
+    }
+    return column +' must be an integer.';
+  }
+  
+  function required(column, data){
+    if(data){
+      return true;
+    }
+    return column +' can not be empty.';
+  }
+  
+  function min(column, data, minimum){
+    data = parseInt( data );
+    if(data > minimum){
+      return true;
+    }
+    return column +' minimum is '+minimum+'.';
+  }
+  
+  function max(column, data, maximum){
+    data = parseInt( data );
+    if(data < maximum){
+      return true;
+    }
+    return column +' maximum is '+maximum+'.';
+  }
+  
+  function min_length(column, data, minimun){
+    data =  data.toString();
+    if(data.length > minimun){
+      return true;
+    }
+    return column +' minimum length is '+minimun+'.';
+  }
+  
+  function max_length(column, data, maximum){
+    data =  data.toString();
+    if(data.length < maximum){
+      return true;
+    }
+    return column +' maximum length is '+maximum+'.';
+  }
+  
+  function validation(sheetName, fields, request){
+    var columns = typeData(sheetName);
+    var field = [];
+    var valid = {};
+    for(var i=0; i < fields.length ; i++){
+      if(columns[fields[i]]){
+        valid[fields[i]] = [];
+        field.push(fields[i]);
+        var rules = columns[fields[i]].split('|');
+        for(var j=0; j<rules.length; j++){
+          var matches = rules[j].replace(/\]/,'').split('[');
+          if(matches[0]=='alfanumerik'){
+            var test = alfanumerik(fields[i], request.parameter[fields[i]]);
+            if(test !== true){
+              valid[fields[i]].push(test);  
+            }
+          }else if(matches[0]=='integer'){
+            var test = integer(fields[i], request.parameter[fields[i]]);
+            if(test !== true){
+              valid[fields[i]].push(test);  
+            }
+          }else if(matches[0]=='required'){
+            var test = required(fields[i], request.parameter[fields[i]]);
+            if(test !== true){
+              valid[fields[i]].push(test);  
+            }
+          }else if(matches[0]=='min'){
+            var test = min(fields[i], request.parameter[fields[i]],matches[1]);
+            if(test !== true){
+              valid[fields[i]].push(test);  
+            }
+          }else if(matches[0]=='max'){
+            var test = max(fields[i], request.parameter[fields[i]],matches[1]);
+            if(test !== true){
+              valid[fields[i]].push(test);  
+            }
+          }else if(matches[0]=='max_length'){
+            var test = max_length(fields[i], request.parameter[fields[i]],matches[1]);
+            if(test !== true){
+              valid[fields[i]].push(test);  
+            }
+          }else if(matches[0]=='min_length'){
+            var test = min_length(fields[i], request.parameter[fields[i]],matches[1]);
+            if(test !== true){
+              valid[fields[i]].push(test);  
+            }
+          }
+        }
+      }
+    }                                   
+    return [field, valid];
+  }
 /*
 Set initial variable
 */
@@ -131,18 +245,32 @@ function doPost(request) {
   if(typeof postRoute()[request.parameter.route] == "undefined"){
     return respond({
       status: false,
-      message:"Action "+request.parameter.route+" does not allowed.",
+      message:"Route parameters must be sent.",
     })
   }
   
   var myInit = bootstrap(request);
-  
   
   if(myInit==false){
     return false;
   }
       
   var activeRow = getRow(request, myInit);
+  
+  var rule = validation(myInit.sheetName, myInit.columns, request);
+  var valid = true;
+  var message = [];
+  for(var i=0; i< rule[0].length; i++){
+    var test = rule[1][rule[0][i]];
+    if(test.length >0){
+      valid = false;
+      message.push(test.join());
+    }
+  }
+  
+  if(!valid){
+    return respond(message);
+  }
   
   if(myInit.action=="put")
   {
