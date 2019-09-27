@@ -7,8 +7,31 @@ function getStructure(sheetName){
     present: [
       "nis","nama","status","deleted_at",
     ],
+    books: [
+      "id","title","author","publisher",
+    ]
   }
   return sheets[sheetName];
+}
+
+/*
+Config/Route
+*/
+  
+function postRoute(){
+  return {
+    "present/put" : ["insert","update"],
+    "present/delete" : ["delete"], 
+    "books/put" : ["insert","update"],
+    "books/delete": ["delete"],
+  }
+}
+
+function getRoute(){
+  return {
+    "present":true,
+    "books":true,
+  }
 }
 
 function typeData(sheetName){
@@ -17,6 +40,12 @@ function typeData(sheetName){
       nis : 'alfanumerik|min_length[5]|max_length[20]|required',
       nama: 'alfanumerik|min_length[3]|max_length[50]|required',
       status: 'integer|min[0]|max[3]|required'
+    },
+    books: {
+      id : 'alfanumerik|min_length[5]|max_length[20]|required',
+      title: 'alfanumerik|min_length[3]|max_length[50]|required',
+      author: 'alfanumerik|min_length[3]|max_length[50]|required',
+      publisher: 'alfanumerik|min_length[3]|max_length[50]|required',
     }
   }
   return sheets[sheetName];
@@ -58,7 +87,7 @@ function typeData(sheetName){
   }
   
   function min_length(column, data, minimun){
-    data =  data.toString();
+    data =  data+'';
     if(data.length > minimun){
       return true;
     }
@@ -66,7 +95,7 @@ function typeData(sheetName){
   }
   
   function max_length(column, data, maximum){
-    data =  data.toString();
+    data =  data + '';
     if(data.length < maximum){
       return true;
     }
@@ -131,7 +160,7 @@ Set initial variable
 
 function init(){
   return {
-    id : "ISIKAN ID SPREADSHEET YANG DIJADIKAN SEBAGAI DATABASE",
+    id : "1uYiE6KdjZLN_0nrVetTFUEGP_Pf5fiqAuinMhgUYaTY",
     sheetName: '',
     action : '',
     columns: [],
@@ -148,7 +177,7 @@ function bootstrap(request){
   if(route == false){
     return respond({
       status: false,
-      message: "You dont have authorisation.",
+      message: "You dont have authorization.",
     })
   }
   
@@ -163,23 +192,6 @@ function bootstrap(request){
     return false;
   }
   return chekInit;
-}
-
-/*
-Config/Route
-*/
-  
-function postRoute(){
-  return {
-      "present/put" : ["insert","update"],
-      "present/delete" : ["delete"], 
-  }
-}
-
-function getRoute(){
-  return {
-    "present":true,
-  }
 }
 
 /*
@@ -206,12 +218,16 @@ Verify table structure
 function checkColumn(request, activeSheet){
   var ss = SpreadsheetApp.openById(activeSheet.id);
   var sheet = ss.getSheetByName(activeSheet.sheetName);
+ 
+  /* 
+  create new sheet if not exists
+  */
   
   if(! sheet){
-    return {
-      status: false,
-      message: "Table "+ activeSheet.sheetName+" is not exists",
-    }
+    ss.insertSheet(activeSheet.sheetName);
+    sheet = ss.getSheetByName(activeSheet.sheetName);
+    activeSheet.columns.push('deleted_at');
+    sheet.appendRow(activeSheet.columns);
   }
   
   var key = request.parameter[activeSheet.columns[0]];
@@ -241,6 +257,19 @@ function checkColumn(request, activeSheet){
 filter request for post method
 */
 function doPost(request) {
+  /*begin test
+  var request = {};
+  var parameter = {
+    route :'books/put',
+    id: '132498',
+    title: 'Buku kita',
+    author: 'Harjito6',
+    publisher: 'Kimia Jaya Baya',
+  }
+  
+  request.parameter = parameter;
+  
+  end test*/
   
   if(typeof postRoute()[request.parameter.route] == "undefined"){
     return respond({
@@ -254,8 +283,9 @@ function doPost(request) {
   if(myInit==false){
     return false;
   }
-      
+  
   var activeRow = getRow(request, myInit);
+  
   
   var rule = validation(myInit.sheetName, myInit.columns, request);
   var valid = true;
@@ -312,6 +342,12 @@ filter request for post method
 */
 
 function doGet(request){
+  /*begin test*/
+  request.parameter.route='present/put';
+  
+  
+  /*end test*/
+  
   if(typeof getRoute()[request.parameter.route] == "undefined"){
     return respond({
       status: false,
@@ -359,6 +395,7 @@ function doGet(request){
 
   
 function respond(message){
+  return Logger.log(message);
   return ContentService.createTextOutput(JSON.stringify(message)).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -367,16 +404,29 @@ function getRow(request,activeSheet){
   var sheet = ss.getSheetByName(activeSheet.sheetName);
   var key = request.parameter[activeSheet.key];
   var lastRow = sheet.getLastRow();
+  
   if(typeof key == "undefined"){
     return false;
   }
   
+  if(lastRow == 1){
+    return -1;
+  }
+    
   if(key*1==key){
     key = key*1;
   }
+
   
   var indexs = sheet.getRange(2, 1, lastRow).getValues();
-  var flags = sheet.getRange(2, activeSheet.columns.indexOf('deleted_at')+1, lastRow).getValues();
+  
+  if(activeSheet.columns.indexOf('deleted_at')>0){
+    var colFlag = activeSheet.columns.indexOf('deleted_at')+1;
+  }else{
+    var colFlag = activeSheet.columns.length+1;
+  }
+  
+  var flags = sheet.getRange(2, colFlag, lastRow).getValues();
   
   for(var row = 0; row<indexs.length; row++){
     var deleted = flags[row][0];  
@@ -407,7 +457,6 @@ function updateData(request, activeSheet, activeRow){
   var ss = SpreadsheetApp.openById(activeSheet.id);
   var sheet = ss.getSheetByName(activeSheet.sheetName);
   var data = [];
-  
   for(var i=1; i<activeSheet.columns.length;i++){
     if(protectFields.indexOf(activeSheet.columns[i])==-1){
       sheet.getRange(activeRow, i+1).setValue(request.parameter[activeSheet.columns[i]]);
