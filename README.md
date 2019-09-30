@@ -6,22 +6,23 @@ simple  framework with google script
 [url API : https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec](9https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec)
 
 ## Method : post
+
   ### param 
-    * route : present/put (insert/update)
-    * nis: [alfanumerik|min_length[5]|max_length[20]|required]
-    * nama: [alfanumerik|min_length[3]|max_length[50]|required]
-    * status : [integer|min[0]|max[3]|require]
+    * route : books/put (insert/update)
+    * id: [alphanumeric|min_length[5]|max_length[20]|required]
+    * title: [alphanumeric|min_length[3]|max_length[50]|required]
+    * author : [alphanumeric|min_length[3]|max_length[50]|required]
   
  ### param 
-    * route : present/delete (soft delete)
-    * nis : [alfanumerik|min_length[5]|max_length[20]|required] 
+    * route : books/delete (soft delete)
+    * id : [alphanumeric] 
 
 ## Method : get
   ### param 
-    * route : present (get by nis)
-    * nis : [varchar]
+    * route : books (get books by id)
+    * id : [alphanumeric]
   ### param
-    * route : present (get from offset to limit)
+    * route : books (get all some books)
     * offset : [int]
     * limit : [int]
     
