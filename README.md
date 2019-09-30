@@ -1,9 +1,9 @@
-# gscript
+# titoFramework
 simple  framework with google script 
 
-[View Result] : (https://docs.google.com/spreadsheets/d/1uYiE6KdjZLN_0nrVetTFUEGP_Pf5fiqAuinMhgUYaTY/edit?usp=sharing)
+[View Result](https://docs.google.com/spreadsheets/d/1uYiE6KdjZLN_0nrVetTFUEGP_Pf5fiqAuinMhgUYaTY/edit?usp=sharing)
 
-[url API : https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec]9https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec)
+[url API : https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec](9https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec)
 
 ## Method : post
   ### param 
@@ -25,8 +25,14 @@ simple  framework with google script
     * offset : [int]
     * limit : [int]
     
-## Penjelasan
-Di aplikasi ini saya menggunakan google sheet dengan nama sheet "present" terdiri atas 4 kolom yaitu nis (alfanumerik), nama (alfanumerik), status (integer) dan deleted_at (timestamp)
+## Explanation
+This application using google sheet as database
+
+## TO Do List
+  * Authentication
+  * telegram bot
+  * pagination
+  * enganced validation with another option like strong pasword, unique key, email etc.
 
 ## Donation
 [Paypal](https://www.paypal.me/harjito)
