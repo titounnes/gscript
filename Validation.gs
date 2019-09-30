@@ -1,6 +1,11 @@
 var Validation = {};
   
-  function integer(column, data){
+  Validation.run = function(){
+    var alphanumeric = function(column, data){
+      return true;
+    }
+  
+    var integer = function(column, data){
     var check = parseInt(data) == data*1;
     if(check){
       return true;
@@ -8,14 +13,14 @@ var Validation = {};
     return column +' must be an integer.';
   }
   
-  function required(column, data){
+  var required = function(column, data){
     if(data){
       return true;
     }
     return column +' can not be empty.';
   }
   
-  function min(column, data, minimum){
+  var min = function(column, data, minimum){
     data = parseInt( data );
     if(data > minimum){
       return true;
@@ -23,7 +28,7 @@ var Validation = {};
     return column +' minimum is '+minimum+'.';
   }
   
-  function max(column, data, maximum){
+  var max = function(column, data, maximum){
     data = parseInt( data );
     if(data < maximum){
       return true;
@@ -31,7 +36,7 @@ var Validation = {};
     return column +' maximum is '+maximum+'.';
   }
   
-  function min_length(column, data, minimun){
+  var min_length = function(column, data, minimun){
     data =  data+'';
     if(data.length > minimun){
       return true;
@@ -39,7 +44,7 @@ var Validation = {};
     return column +' minimum length is '+minimun+'.';
   }
   
-  function max_length(column, data, maximum){
+  var max_length = function(column, data, maximum){
     data =  data + '';
     if(data.length < maximum){
       return true;
@@ -47,11 +52,6 @@ var Validation = {};
     return column +' maximum length is '+maximum+'.';
   }
   
-  Validation.run = function(){
-    var alphanumeric = function(column, data){
-      return true;
-    }
-    
     Validation.valid = true;
     Validation.message = [];
     
@@ -65,8 +65,8 @@ var Validation = {};
         var rules = columns[fields[i]].split('|');
         for(var j=0; j<rules.length; j++){
           var matches = rules[j].replace(/\]/,'').split('[');
-          matches[0] = alphanumeric;
-          var func = matches[0]+"('"+fields[i]+"','"+param[fields[i]]+"'"+(matches[1]?",'"+matches[1]+"'" :"")+")";
+          //matches[0] = alphanumeric;
+          /*var func = matches[0]+"('"+fields[i]+"','"+param[fields[i]]+"'"+(matches[1]?",'"+matches[1]+"'" :"")+")";
           var test = eval(func);
           Logger.log(test);
           if(test !==true){
@@ -75,9 +75,9 @@ var Validation = {};
             }
           //Response.message.push(eval(func));
           //Response.log();
-          /*
-          if(matches[0]=='alfanumerik'){
-            var test = alfanumerik(fields[i], param[fields[i]]);
+          */
+          if(matches[0]=='alphanumeric'){
+            var test = alphanumeric(fields[i], param[fields[i]]);
             if(test !== true){
               Validation.valid = false;
               Validation.message.push(test)
@@ -119,7 +119,7 @@ var Validation = {};
               Response.message.push(test)
             }
           }
-          */
+          
         }
       }
     }               
