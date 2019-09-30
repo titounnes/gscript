@@ -7,28 +7,28 @@ Response.respond = function(message){
 }
 
 Response.fail = function(){
-  Response.respond({
+  Response.log();
+  return Response.respond({
     status: false,
     message: Response.message
     })
-  Response.log();
 }
 
 Response.success = function(){
-  Response.respond({
+  Response.log();
+  return Response.respond({
     status: true,
     message: Response.message
     })
-  Response.log();
 }
 
 Response.result = function(data){
-  Response.respond({
+  Response.message = data;
+  Response.log();
+  return Response.respond({
     status: true,
     data: data,
     })  
-  Response.message = data;
-  Response.log();
 }
   
 Response.log = function(){

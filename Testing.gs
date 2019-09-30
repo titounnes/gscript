@@ -1,23 +1,26 @@
-function testPost(request) {
+function testPost() {
   //begin test
   var request = {};
   var parameter = {
-    route :'books/delete',
-    id: '132498588',
-    title: 'B',
-    author: 'Ha',
+    route :'books/put',
+    id: 'testing1',
+    title: 'Baaaa',
+    author: 'Harji',
     publisher: 'Kimia Jaya Baya',
   }
   
   request.parameter = parameter;
   
+  
   //end test
   var route = Config.route.post(request.parameter.route)
 
+  
   if(! route){
-    Response.message.push('Route paramerer must be set on config');
+    Response.message = ['Route parameter must be set on config'];
     return Response.fail();
   }
+  
   
   App.init(request);
   
@@ -28,11 +31,12 @@ function testPost(request) {
   var rule = Validation.run();
   
   if(!rule){
+    
     return Response.fail();
   }
   
   App.config.allowMethod = Config.route.post(App.config.request.parameter.route)
-  
+    
   if(App.config.action=="put")
   {
     if(activeRow==-1){
@@ -41,21 +45,21 @@ function testPost(request) {
         return Response.fail();
       }
       var id= Database.insertData();
-      Response.message.push("Data has been added.");
+      Response.message = ["Data has been added."];
       return Response.success();
     }
     var id= Database.updateData(activeRow);
-    Response.message.push("Data has been updated.");
+    Response.message = ["Data has been updated."];
     return Response.success();
   }
 
   if(activeRow==-1){
-    Response.message.push(App.config.key+" does not exists.");
+    Response.message = [App.config.key+" does not exists."];
     return Response.fail();
   }
   
   Database.deleteData(activeRow);
-  Response.message.push("Data has beeen deleted.");
+  Response.message = ["Data has beeen deleted."];
   return Response.success();
 }
 

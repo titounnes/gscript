@@ -3,9 +3,10 @@ function doPost(request) {
   var route = Config.route.post(request.parameter.route)
 
   if(! route){
-    Response.message.push('Route paramerer must be set on config');
+    Response.message = ['Route parameter must be set on config'];
     return Response.fail();
   }
+  
   
   App.init(request);
   
@@ -16,11 +17,12 @@ function doPost(request) {
   var rule = Validation.run();
   
   if(!rule){
+    
     return Response.fail();
   }
   
   App.config.allowMethod = Config.route.post(App.config.request.parameter.route)
-  
+    
   if(App.config.action=="put")
   {
     if(activeRow==-1){
@@ -29,21 +31,21 @@ function doPost(request) {
         return Response.fail();
       }
       var id= Database.insertData();
-      Response.message.push("Data has been added.");
+      Response.message = ["Data has been added."];
       return Response.success();
     }
     var id= Database.updateData(activeRow);
-    Response.message.push("Data has been updated.");
+    Response.message = ["Data has been updated."];
     return Response.success();
   }
 
   if(activeRow==-1){
-    Response.message.push(App.config.key+" does not exists.");
+    Response.message = [App.config.key+" does not exists."];
     return Response.fail();
   }
   
   Database.deleteData(activeRow);
-  Response.message.push("Data has beeen deleted.");
+  Response.message = ["Data has beeen deleted."];
   return Response.success();
 }
 
