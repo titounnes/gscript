@@ -5,7 +5,7 @@ simple  framework with google script
 
 [url API : https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec](9https://script.google.com/macros/s/AKfycbzC89SW5iNKCYmhOX0MS_Umw9ZNFW-tPEnYvIy_ZTwt1QeQAvj8/exec)
 
-![](https://e-project-tech.com/e-project.ico)
+![](https://e-project-tech.com/e-project.ico | width=100)
 
 ## Method : post
 
